@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: deploy-to-staging-
+spec:
+  entrypoint: deploy-to-staging
+  templates:
+  - name: deploy-to-staging
+    steps:
+
+    - - name: was-conflicting-deploy
+        template: was-conflicting-deploy
+
+    - - name: approve-deploy
+        template: approve-deploy
+        when: "{{steps.was-conflicting-deploy.outputs.result}} == True"
+
+  - name: was-conflicting-deploy
+    script:
+      image: python:alpine3.6
+      command: [ python ]
+      source: |
+        import random
+        print("True" if random.randint(1,4) % 4 == 0 else "False")
+
+  - name: approve-deploy
+    suspend: {}
+  
